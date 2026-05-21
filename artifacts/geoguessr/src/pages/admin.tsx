@@ -289,7 +289,12 @@ export default function Admin() {
                     <TableRow key={loc.id}>
                       <TableCell className="font-mono text-xs">{loc.id}</TableCell>
                       <TableCell>
-                        <div className="w-16 h-10 bg-cover bg-center rounded border border-border" style={{ backgroundImage: `url(${loc.imageUrl})` }} />
+                        <img
+                          src={loc.imageUrl}
+                          alt={loc.name}
+                          referrerPolicy="no-referrer"
+                          className="w-16 h-10 object-cover rounded border border-border bg-muted"
+                        />
                       </TableCell>
                       <TableCell className="font-medium">{loc.name}</TableCell>
                       <TableCell className="font-mono text-xs text-muted-foreground">{loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}</TableCell>

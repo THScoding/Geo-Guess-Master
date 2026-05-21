@@ -82,9 +82,11 @@ export default function Play() {
       {/* LEFT PANEL: The Photo */}
       <div className="flex-1 relative bg-black flex flex-col">
         {game?.currentPhotoUrl ? (
-          <div 
-            className="w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${game.currentPhotoUrl})` }}
+          <img
+            src={game.currentPhotoUrl}
+            alt="Location to guess"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground font-mono">
