@@ -3,13 +3,18 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: GeoGuessr-like game API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: locations
+    description: Game location management (admin)
+  - name: games
+    description: Game session operations (player)
+
 paths:
   /healthz:
     get:
@@ -24,6 +29,207 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /locations:
+    get:
+      operationId: listLocations
+      tags: [locations]
+      summary: List all locations
+      responses:
+        "200":
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Location"
+    post:
+      operationId: createLocation
+      tags: [locations]
+      summary: Create a new location (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+        "400":
+          description: Invalid input
+
+  /locations/stats:
+    get:
+      operationId: getLocationStats
+      tags: [locations]
+      summary: Get location stats for admin dashboard
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationStats"
+
+  /locations/{id}:
+    get:
+      operationId: getLocation
+      tags: [locations]
+      summary: Get a single location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Location found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateLocation
+      tags: [locations]
+      summary: Update a location (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationPatch"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteLocation
+      tags: [locations]
+      summary: Delete a location (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /games:
+    post:
+      operationId: createGame
+      tags: [games]
+      summary: Start a new game session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameInput"
+      responses:
+        "201":
+          description: Game created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+        "400":
+          description: Not enough locations to start a game
+
+  /games/{id}:
+    get:
+      operationId: getGame
+      tags: [games]
+      summary: Get current game state
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Game state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Game"
+        "404":
+          description: Not found
+
+  /games/{id}/guess:
+    post:
+      operationId: submitGuess
+      tags: [games]
+      summary: Submit a guess for the current round
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuessInput"
+      responses:
+        "200":
+          description: Guess result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuessResult"
+        "400":
+          description: Game already finished or invalid
+        "404":
+          description: Game not found
+
+  /games/{id}/results:
+    get:
+      operationId: getGameResults
+      tags: [games]
+      summary: Get final results for a completed game
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Final game results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameResults"
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +240,166 @@ components:
       required:
         - status
 
+    Location:
+      type: object
+      required: [id, name, lat, lng, imageUrl, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        lat:
+          type: number
+        lng:
+          type: number
+        imageUrl:
+          type: string
+        hint:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    LocationInput:
+      type: object
+      required: [name, lat, lng, imageUrl]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        imageUrl:
+          type: string
+          minLength: 1
+        hint:
+          type: string
+
+    LocationPatch:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        imageUrl:
+          type: string
+        hint:
+          type: string
+
+    LocationStats:
+      type: object
+      required: [totalLocations, totalGames, avgScore]
+      properties:
+        totalLocations:
+          type: integer
+        totalGames:
+          type: integer
+        avgScore:
+          type: number
+
+    GameInput:
+      type: object
+      properties:
+        rounds:
+          type: integer
+          minimum: 1
+          maximum: 10
+
+    Game:
+      type: object
+      required: [id, rounds, currentRound, totalScore, status, currentPhotoUrl]
+      properties:
+        id:
+          type: integer
+        rounds:
+          type: integer
+        currentRound:
+          type: integer
+        totalScore:
+          type: integer
+        status:
+          type: string
+          enum: [in_progress, finished]
+        currentPhotoUrl:
+          type: ["string", "null"]
+        currentLocationName:
+          type: ["string", "null"]
+
+    GuessInput:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+
+    GuessResult:
+      type: object
+      required: [distanceKm, score, correctLat, correctLng, correctName, totalScore, roundComplete, gameComplete]
+      properties:
+        distanceKm:
+          type: number
+        score:
+          type: integer
+        correctLat:
+          type: number
+        correctLng:
+          type: number
+        correctName:
+          type: string
+        correctImageUrl:
+          type: string
+        totalScore:
+          type: integer
+        roundComplete:
+          type: boolean
+        gameComplete:
+          type: boolean
+
+    RoundResult:
+      type: object
+      required: [round, locationName, guessLat, guessLng, correctLat, correctLng, distanceKm, score]
+      properties:
+        round:
+          type: integer
+        locationName:
+          type: string
+        guessLat:
+          type: number
+        guessLng:
+          type: number
+        correctLat:
+          type: number
+        correctLng:
+          type: number
+        distanceKm:
+          type: number
+        score:
+          type: integer
+
+    GameResults:
+      type: object
+      required: [id, totalScore, rounds, roundResults]
+      properties:
+        id:
+          type: integer
+        totalScore:
+          type: integer
+        rounds:
+          type: integer
+        roundResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoundResult"
