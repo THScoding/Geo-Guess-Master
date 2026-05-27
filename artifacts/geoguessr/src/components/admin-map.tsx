@@ -1,14 +1,26 @@
 import React, { useRef, useCallback } from 'react';
 
-// Grid runs -100 to +100 on both axes; (0,0) is the image center.
+// Coordinate system:
+//   (0, 0)     = image center
+//   (-100,-100) = bottom-left
+//   (+100,+100) = top-right
+// X (lng) increases left → right
+// Y (lat) increases bottom → top  (CSS top% is therefore inverted)
+
 const HALF = 100;
 
-function toPercent(coord: number) {
-  return `${((coord + HALF) / (HALF * 2)) * 100}%`;
+function xToPercent(lng: number) {
+  return `${((lng + HALF) / (HALF * 2)) * 100}%`;
 }
 
-function toCoord(px: number, size: number) {
-  return Math.round(((px / size) * (HALF * 2) - HALF) * 100) / 100;
+function yToPercent(lat: number) {
+  return `${((HALF - lat) / (HALF * 2)) * 100}%`;
+}
+
+function pxToCoords(px: number, py: number, w: number, h: number) {
+  const lng = Math.round(((px / w) * (HALF * 2) - HALF) * 100) / 100;
+  const lat = Math.round((HALF - (py / h) * (HALF * 2)) * 100) / 100;
+  return { lng, lat };
 }
 
 interface AdminMapProps {
@@ -23,9 +35,8 @@ export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = toCoord(e.clientX - rect.left, rect.width);
-    const y = toCoord(e.clientY - rect.top, rect.height);
-    onChange(y, x); // lat=y, lng=x
+    const { lat: y, lng: x } = pxToCoords(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height);
+    onChange(y, x);
   }, [onChange]);
 
   const hasPinXY = lat != null && lng != null;
@@ -47,7 +58,7 @@ export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
       {hasPinXY && (
         <div
           className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
-          style={{ left: toPercent(lng!), top: toPercent(lat!) }}
+          style={{ left: xToPercent(lng!), top: yToPercent(lat!) }}
         >
           <svg width="22" height="33" viewBox="0 0 24 36" fill="none">
             <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#f59e0b" stroke="white" strokeWidth="2"/>

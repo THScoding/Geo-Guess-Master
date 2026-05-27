@@ -1,14 +1,26 @@
 import React, { useRef, useCallback } from 'react';
 
-// Grid runs -100 to +100 on both axes; (0,0) is the image center.
+// Coordinate system:
+//   (0, 0)     = image center
+//   (-100,-100) = bottom-left
+//   (+100,+100) = top-right
+// X (lng) increases left → right
+// Y (lat) increases bottom → top  (CSS top% is therefore inverted)
+
 const HALF = 100;
 
-function toPercent(coord: number) {
-  return `${((coord + HALF) / (HALF * 2)) * 100}%`;
+function xToPercent(lng: number) {
+  return `${((lng + HALF) / (HALF * 2)) * 100}%`;
 }
 
-function toCoord(px: number, size: number) {
-  return Math.round(((px / size) * (HALF * 2) - HALF) * 100) / 100;
+function yToPercent(lat: number) {
+  return `${((HALF - lat) / (HALF * 2)) * 100}%`;
+}
+
+function pxToCoords(px: number, py: number, w: number, h: number) {
+  const lng = Math.round(((px / w) * (HALF * 2) - HALF) * 100) / 100;
+  const lat = Math.round((HALF - (py / h) * (HALF * 2)) * 100) / 100;
+  return { lng, lat };
 }
 
 interface GameMapProps {
@@ -29,9 +41,8 @@ export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRou
     if (isRoundOver) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = toCoord(e.clientX - rect.left, rect.width);
-    const y = toCoord(e.clientY - rect.top, rect.height);
-    onGuessSelect({ lat: y, lng: x });
+    const { lat, lng } = pxToCoords(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height);
+    onGuessSelect({ lat, lng });
   }, [isRoundOver, onGuessSelect]);
 
   return (
@@ -52,7 +63,7 @@ export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRou
       {guessCoords && (
         <div
           className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
-          style={{ left: toPercent(guessCoords.lng), top: toPercent(guessCoords.lat) }}
+          style={{ left: xToPercent(guessCoords.lng), top: yToPercent(guessCoords.lat) }}
         >
           <svg width="24" height="36" viewBox="0 0 24 36" fill="none">
             <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#3b82f6" stroke="white" strokeWidth="2"/>
@@ -66,10 +77,10 @@ export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRou
         <>
           <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
             <line
-              x1={toPercent(guessCoords.lng)}
-              y1={toPercent(guessCoords.lat)}
-              x2={toPercent(guessResult.correctLng)}
-              y2={toPercent(guessResult.correctLat)}
+              x1={xToPercent(guessCoords.lng)}
+              y1={yToPercent(guessCoords.lat)}
+              x2={xToPercent(guessResult.correctLng)}
+              y2={yToPercent(guessResult.correctLat)}
               stroke="#f59e0b"
               strokeWidth="2"
               strokeDasharray="8 5"
@@ -78,7 +89,7 @@ export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRou
           </svg>
           <div
             className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
-            style={{ left: toPercent(guessResult.correctLng), top: toPercent(guessResult.correctLat) }}
+            style={{ left: xToPercent(guessResult.correctLng), top: yToPercent(guessResult.correctLat) }}
           >
             <svg width="24" height="36" viewBox="0 0 24 36" fill="none">
               <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#22c55e" stroke="white" strokeWidth="2"/>

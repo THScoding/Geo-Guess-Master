@@ -1,12 +1,20 @@
 import React from 'react';
 import { RoundResult } from '@workspace/api-client-react';
 
-// Grid runs -100 to +100 on both axes; (0,0) is the image center.
+// Coordinate system:
+//   (0, 0)     = image center
+//   (-100,-100) = bottom-left
+//   (+100,+100) = top-right
+
 const HALF = 100;
 const COLORS = ['#f59e0b', '#3b82f6', '#a855f7', '#ec4899', '#14b8a6'];
 
-function toPercent(coord: number) {
-  return `${((coord + HALF) / (HALF * 2)) * 100}%`;
+function xToPercent(lng: number) {
+  return `${((lng + HALF) / (HALF * 2)) * 100}%`;
+}
+
+function yToPercent(lat: number) {
+  return `${((HALF - lat) / (HALF * 2)) * 100}%`;
 }
 
 interface ResultsMapProps {
@@ -27,10 +35,10 @@ export default function ResultsMap({ results }: ResultsMapProps) {
         {results.map((round, i) => (
           <line
             key={`line-${i}`}
-            x1={toPercent(round.guessLng)}
-            y1={toPercent(round.guessLat)}
-            x2={toPercent(round.correctLng)}
-            y2={toPercent(round.correctLat)}
+            x1={xToPercent(round.guessLng)}
+            y1={yToPercent(round.guessLat)}
+            x2={xToPercent(round.correctLng)}
+            y2={yToPercent(round.correctLat)}
             stroke={COLORS[i % COLORS.length]}
             strokeWidth="2"
             strokeDasharray="7 4"
@@ -45,7 +53,7 @@ export default function ResultsMap({ results }: ResultsMapProps) {
           {/* Guess pin — grey, faded */}
           <div
             className="absolute -translate-x-1/2 -translate-y-full pointer-events-none opacity-60"
-            style={{ left: toPercent(round.guessLng), top: toPercent(round.guessLat) }}
+            style={{ left: xToPercent(round.guessLng), top: yToPercent(round.guessLat) }}
           >
             <svg width="18" height="27" viewBox="0 0 24 36" fill="none">
               <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#6b7280" stroke="white" strokeWidth="2"/>
@@ -55,7 +63,7 @@ export default function ResultsMap({ results }: ResultsMapProps) {
           {/* Correct pin — coloured, numbered */}
           <div
             className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
-            style={{ left: toPercent(round.correctLng), top: toPercent(round.correctLat) }}
+            style={{ left: xToPercent(round.correctLng), top: yToPercent(round.correctLat) }}
             title={`Round ${round.round}: ${round.locationName} — ${round.score} pts`}
           >
             <svg width="22" height="33" viewBox="0 0 24 36" fill="none">
