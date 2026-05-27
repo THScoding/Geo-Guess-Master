@@ -29,8 +29,8 @@ const locationSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   imageUrl: z.string().url("Must be a valid URL"),
-  lat: z.coerce.number().min(0).max(100),
-  lng: z.coerce.number().min(0).max(100),
+  lat: z.coerce.number().min(0).max(200),
+  lng: z.coerce.number().min(0).max(200),
   hint: z.string().optional()
 });
 

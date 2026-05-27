@@ -1,9 +1,15 @@
 import React, { useRef, useCallback } from 'react';
 
+const GRID_SIZE = 200;
+
 interface AdminMapProps {
   lat?: number;
   lng?: number;
   onChange: (lat: number, lng: number) => void;
+}
+
+function toPercent(coord: number) {
+  return `${(coord / GRID_SIZE) * 100}%`;
 }
 
 export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
@@ -12,12 +18,12 @@ export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const xPct = Math.round(((e.clientX - rect.left) / rect.width) * 10000) / 100;
-    const yPct = Math.round(((e.clientY - rect.top) / rect.height) * 10000) / 100;
-    onChange(yPct, xPct); // lat=y, lng=x
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * GRID_SIZE * 100) / 100;
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * GRID_SIZE * 100) / 100;
+    onChange(y, x); // lat=y, lng=x
   }, [onChange]);
 
-  const hasPinXY = lat !== undefined && lng !== undefined && lat !== null && lng !== null && (lat !== 0 || lng !== 0);
+  const hasPinXY = lat != null && lng != null && (lat !== 0 || lng !== 0);
 
   return (
     <div
@@ -36,7 +42,7 @@ export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
       {hasPinXY && (
         <div
           className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
-          style={{ left: `${lng}%`, top: `${lat}%` }}
+          style={{ left: toPercent(lng!), top: toPercent(lat!) }}
         >
           <svg width="22" height="33" viewBox="0 0 24 36" fill="none">
             <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#f59e0b" stroke="white" strokeWidth="2"/>
