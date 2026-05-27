@@ -26,14 +26,15 @@ function shuffleArray<T>(arr: T[]): T[] {
 
 router.post("/games", async (req, res): Promise<void> => {
   const parsed = CreateGameBody.safeParse(req.body);
-  const rounds = parsed.success && parsed.data.rounds ? parsed.data.rounds : 5;
+  const requestedRounds = parsed.success && parsed.data.rounds ? parsed.data.rounds : 5;
 
   const allLocations = await db.select({ id: locationsTable.id }).from(locationsTable);
-  if (allLocations.length < rounds) {
-    res.status(400).json({ error: `Not enough locations. Need ${rounds}, have ${allLocations.length}.` });
+  if (allLocations.length < 1) {
+    res.status(400).json({ error: "No locations available. Add some locations in the admin panel first." });
     return;
   }
 
+  const rounds = Math.min(requestedRounds, allLocations.length);
   const shuffled = shuffleArray(allLocations).slice(0, rounds);
   const locationOrder = shuffled.map((l) => l.id).join(",");
 
