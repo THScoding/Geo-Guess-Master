@@ -1,11 +1,12 @@
 import React from 'react';
 import { RoundResult } from '@workspace/api-client-react';
 
-const GRID_SIZE = 200;
+// Grid runs -100 to +100 on both axes; (0,0) is the image center.
+const HALF = 100;
 const COLORS = ['#f59e0b', '#3b82f6', '#a855f7', '#ec4899', '#14b8a6'];
 
 function toPercent(coord: number) {
-  return `${(coord / GRID_SIZE) * 100}%`;
+  return `${((coord + HALF) / (HALF * 2)) * 100}%`;
 }
 
 interface ResultsMapProps {

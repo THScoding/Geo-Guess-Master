@@ -1,15 +1,20 @@
 import React, { useRef, useCallback } from 'react';
 
-const GRID_SIZE = 200;
+// Grid runs -100 to +100 on both axes; (0,0) is the image center.
+const HALF = 100;
+
+function toPercent(coord: number) {
+  return `${((coord + HALF) / (HALF * 2)) * 100}%`;
+}
+
+function toCoord(px: number, size: number) {
+  return Math.round(((px / size) * (HALF * 2) - HALF) * 100) / 100;
+}
 
 interface AdminMapProps {
   lat?: number;
   lng?: number;
   onChange: (lat: number, lng: number) => void;
-}
-
-function toPercent(coord: number) {
-  return `${(coord / GRID_SIZE) * 100}%`;
 }
 
 export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
@@ -18,12 +23,12 @@ export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * GRID_SIZE * 100) / 100;
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * GRID_SIZE * 100) / 100;
+    const x = toCoord(e.clientX - rect.left, rect.width);
+    const y = toCoord(e.clientY - rect.top, rect.height);
     onChange(y, x); // lat=y, lng=x
   }, [onChange]);
 
-  const hasPinXY = lat != null && lng != null && (lat !== 0 || lng !== 0);
+  const hasPinXY = lat != null && lng != null;
 
   return (
     <div

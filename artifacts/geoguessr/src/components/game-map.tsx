@@ -1,6 +1,15 @@
 import React, { useRef, useCallback } from 'react';
 
-const GRID_SIZE = 200;
+// Grid runs -100 to +100 on both axes; (0,0) is the image center.
+const HALF = 100;
+
+function toPercent(coord: number) {
+  return `${((coord + HALF) / (HALF * 2)) * 100}%`;
+}
+
+function toCoord(px: number, size: number) {
+  return Math.round(((px / size) * (HALF * 2) - HALF) * 100) / 100;
+}
 
 interface GameMapProps {
   onGuessSelect: (coords: { lat: number; lng: number }) => void;
@@ -13,10 +22,6 @@ interface GameMapProps {
   isRoundOver: boolean;
 }
 
-function toPercent(coord: number) {
-  return `${(coord / GRID_SIZE) * 100}%`;
-}
-
 export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRoundOver }: GameMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -24,9 +29,8 @@ export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRou
     if (isRoundOver) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * GRID_SIZE * 100) / 100;
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * GRID_SIZE * 100) / 100;
-    // lng = x axis, lat = y axis
+    const x = toCoord(e.clientX - rect.left, rect.width);
+    const y = toCoord(e.clientY - rect.top, rect.height);
     onGuessSelect({ lat: y, lng: x });
   }, [isRoundOver, onGuessSelect]);
 

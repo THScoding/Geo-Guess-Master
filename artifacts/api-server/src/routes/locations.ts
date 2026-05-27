@@ -15,6 +15,10 @@ import {
 
 const router: IRouter = Router();
 
+function serializeLocation(loc: typeof locationsTable.$inferSelect) {
+  return { ...loc, createdAt: loc.createdAt instanceof Date ? loc.createdAt.toISOString() : loc.createdAt };
+}
+
 router.get("/locations/stats", async (req, res): Promise<void> => {
   const [locCount] = await db.select({ count: count() }).from(locationsTable);
   const [gameCount] = await db.select({ count: count() }).from(gamesTable);
@@ -29,7 +33,7 @@ router.get("/locations/stats", async (req, res): Promise<void> => {
 
 router.get("/locations", async (_req, res): Promise<void> => {
   const locations = await db.select().from(locationsTable).orderBy(locationsTable.createdAt);
-  res.json(ListLocationsResponse.parse(locations));
+  res.json(ListLocationsResponse.parse(locations.map(serializeLocation)));
 });
 
 router.post("/locations", async (req, res): Promise<void> => {
@@ -48,7 +52,7 @@ router.post("/locations", async (req, res): Promise<void> => {
     hint: parsed.data.hint ?? null,
   }).returning();
 
-  res.status(201).json(GetLocationResponse.parse(location));
+  res.status(201).json(GetLocationResponse.parse(serializeLocation(location)));
 });
 
 router.get("/locations/:id", async (req, res): Promise<void> => {
@@ -64,7 +68,7 @@ router.get("/locations/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(GetLocationResponse.parse(location));
+  res.json(GetLocationResponse.parse(serializeLocation(location)));
 });
 
 router.patch("/locations/:id", async (req, res): Promise<void> => {
@@ -99,7 +103,7 @@ router.patch("/locations/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(UpdateLocationResponse.parse(location));
+  res.json(UpdateLocationResponse.parse(serializeLocation(location)));
 });
 
 router.delete("/locations/:id", async (req, res): Promise<void> => {
