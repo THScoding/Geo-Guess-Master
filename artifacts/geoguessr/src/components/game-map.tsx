@@ -1,170 +1,90 @@
-import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix Leaflet's default icon paths
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-});
-
-// Custom icons
-const guessIcon = new L.Icon({
-  iconUrl: markerIcon, // Could use a custom colored pin if available
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-const correctIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
+import React, { useRef, useCallback } from 'react';
 
 interface GameMapProps {
-  onGuessSelect: (coords: {lat: number, lng: number}) => void;
-  guessCoords: {lat: number, lng: number} | null;
-  guessResult?: any;
+  onGuessSelect: (coords: { lat: number; lng: number }) => void;
+  guessCoords: { lat: number; lng: number } | null;
+  guessResult?: {
+    correctLat: number;
+    correctLng: number;
+    correctName?: string;
+  } | null;
   isRoundOver: boolean;
 }
 
 export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRoundOver }: GameMapProps) {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const guessMarkerRef = useRef<L.Marker | null>(null);
-  const correctMarkerRef = useRef<L.Marker | null>(null);
-  const lineRef = useRef<L.Polyline | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    if (!mapRef.current) {
-      // Initialize map
-      mapRef.current = L.map(mapContainerRef.current, {
-        center: [20, 0],
-        zoom: 2,
-        zoomControl: false,
-        worldCopyJump: true,
-      });
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        className: 'map-tiles'
-      }).addTo(mapRef.current);
-
-      L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
-
-      // Handle clicks
-      mapRef.current.on('click', (e: L.LeafletMouseEvent) => {
-        if (isRoundOver) return; // Ignore clicks if round is over
-        const { lat, lng } = e.latlng;
-        onGuessSelect({ lat, lng });
-      });
-    }
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
-  }, []);
-
-  // Sync guess marker
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    if (guessCoords) {
-      if (!guessMarkerRef.current) {
-        guessMarkerRef.current = L.marker([guessCoords.lat, guessCoords.lng], { icon: guessIcon }).addTo(mapRef.current);
-      } else {
-        guessMarkerRef.current.setLatLng([guessCoords.lat, guessCoords.lng]);
-      }
-    } else {
-      if (guessMarkerRef.current) {
-        guessMarkerRef.current.remove();
-        guessMarkerRef.current = null;
-      }
-    }
-  }, [guessCoords]);
-
-  // Handle round result visualization
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    // Clean up previous result lines/markers if not in round over state
-    if (!isRoundOver) {
-      if (correctMarkerRef.current) {
-        correctMarkerRef.current.remove();
-        correctMarkerRef.current = null;
-      }
-      if (lineRef.current) {
-        lineRef.current.remove();
-        lineRef.current = null;
-      }
-      
-      // Reset view
-      if (guessCoords) {
-        // preserve zoom if we have a guess, else center world
-      } else {
-         mapRef.current.setView([20, 0], 2);
-      }
-      return;
-    }
-
-    if (guessResult && guessCoords) {
-      const correctLatLng: L.LatLngTuple = [guessResult.correctLat, guessResult.correctLng];
-      const guessLatLng: L.LatLngTuple = [guessCoords.lat, guessCoords.lng];
-
-      // Add correct marker
-      if (!correctMarkerRef.current) {
-        correctMarkerRef.current = L.marker(correctLatLng, { icon: correctIcon })
-          .bindPopup(`<b>${guessResult.correctName || 'Target'}</b>`)
-          .addTo(mapRef.current);
-      } else {
-        correctMarkerRef.current.setLatLng(correctLatLng);
-      }
-
-      // Add line
-      if (!lineRef.current) {
-        lineRef.current = L.polyline([guessLatLng, correctLatLng], {
-          color: '#f59e0b', // Primary amber
-          weight: 3,
-          opacity: 0.8,
-          dashArray: '10, 10',
-          lineCap: 'round'
-        }).addTo(mapRef.current);
-      }
-
-      // Fit bounds to show both markers
-      const bounds = L.latLngBounds([guessLatLng, correctLatLng]);
-      mapRef.current.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1 });
-      
-      // Open popup
-      correctMarkerRef.current.openPopup();
-    }
-  }, [isRoundOver, guessResult, guessCoords]);
-
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (isRoundOver) return;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+    const yPct = ((e.clientY - rect.top) / rect.height) * 100;
+    // lng = x%, lat = y%
+    onGuessSelect({ lat: yPct, lng: xPct });
+  }, [isRoundOver, onGuessSelect]);
 
   return (
-    <div className="w-full h-full relative">
-      <div ref={mapContainerRef} className="w-full h-full z-0" />
-      {isRoundOver && (
-        <div className="absolute top-0 left-0 right-0 bottom-0 bg-transparent z-[500] pointer-events-none" />
+    <div
+      ref={containerRef}
+      onClick={handleClick}
+      className="w-full h-full relative overflow-hidden select-none"
+      style={{ cursor: isRoundOver ? 'default' : 'crosshair' }}
+    >
+      <img
+        src="/map.png"
+        alt="Game map"
+        className="w-full h-full object-cover pointer-events-none"
+        draggable={false}
+      />
+
+      {/* Guess pin */}
+      {guessCoords && (
+        <div
+          className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
+          style={{ left: `${guessCoords.lng}%`, top: `${guessCoords.lat}%` }}
+        >
+          <svg width="24" height="36" viewBox="0 0 24 36" fill="none">
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#3b82f6" stroke="white" strokeWidth="2"/>
+            <circle cx="12" cy="12" r="5" fill="white"/>
+          </svg>
+        </div>
+      )}
+
+      {/* Correct pin + line */}
+      {isRoundOver && guessResult && guessCoords && (
+        <>
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ overflow: 'visible' }}
+          >
+            <line
+              x1={`${guessCoords.lng}%`}
+              y1={`${guessCoords.lat}%`}
+              x2={`${guessResult.correctLng}%`}
+              y2={`${guessResult.correctLat}%`}
+              stroke="#f59e0b"
+              strokeWidth="2"
+              strokeDasharray="8 5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <div
+            className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
+            style={{ left: `${guessResult.correctLng}%`, top: `${guessResult.correctLat}%` }}
+          >
+            <svg width="24" height="36" viewBox="0 0 24 36" fill="none">
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#22c55e" stroke="white" strokeWidth="2"/>
+              <circle cx="12" cy="12" r="5" fill="white"/>
+            </svg>
+          </div>
+        </>
+      )}
+
+      {!isRoundOver && !guessCoords && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm text-xs font-mono px-3 py-1 rounded border border-border text-muted-foreground pointer-events-none">
+          Click on the map to place your guess
+        </div>
       )}
     </div>
   );

@@ -1,17 +1,4 @@
-import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-});
+import React, { useRef, useCallback } from 'react';
 
 interface AdminMapProps {
   lat?: number;
@@ -20,59 +7,47 @@ interface AdminMapProps {
 }
 
 export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markerRef = useRef<L.Marker | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!mapContainerRef.current) return;
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const xPct = Math.round(((e.clientX - rect.left) / rect.width) * 10000) / 100;
+    const yPct = Math.round(((e.clientY - rect.top) / rect.height) * 10000) / 100;
+    onChange(yPct, xPct); // lat=y, lng=x
+  }, [onChange]);
 
-    if (!mapRef.current) {
-      mapRef.current = L.map(mapContainerRef.current, {
-        center: lat && lng ? [lat, lng] : [20, 0],
-        zoom: lat && lng ? 10 : 2,
-        worldCopyJump: true,
-      });
+  const hasPinXY = lat !== undefined && lng !== undefined && lat !== null && lng !== null && (lat !== 0 || lng !== 0);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        className: 'map-tiles' // Assuming dark mode tweaks in CSS if any
-      }).addTo(mapRef.current);
+  return (
+    <div
+      ref={containerRef}
+      onClick={handleClick}
+      className="w-full h-full relative overflow-hidden rounded-md border border-border select-none"
+      style={{ cursor: 'crosshair', minHeight: '300px' }}
+    >
+      <img
+        src="/map.png"
+        alt="Map"
+        className="w-full h-full object-cover pointer-events-none"
+        draggable={false}
+      />
 
-      mapRef.current.on('click', (e: L.LeafletMouseEvent) => {
-        onChange(e.latlng.lat, e.latlng.lng);
-      });
-    }
+      {hasPinXY && (
+        <div
+          className="absolute -translate-x-1/2 -translate-y-full pointer-events-none"
+          style={{ left: `${lng}%`, top: `${lat}%` }}
+        >
+          <svg width="22" height="33" viewBox="0 0 24 36" fill="none">
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#f59e0b" stroke="white" strokeWidth="2"/>
+            <circle cx="12" cy="12" r="5" fill="white"/>
+          </svg>
+        </div>
+      )}
 
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    if (lat !== undefined && lng !== undefined && lat !== null && lng !== null) {
-      const pos: L.LatLngTuple = [lat, lng];
-      
-      if (!markerRef.current) {
-        markerRef.current = L.marker(pos).addTo(mapRef.current);
-      } else {
-        markerRef.current.setLatLng(pos);
-      }
-      
-      // Auto-pan if marker is outside current view (optional, but good UX)
-      // mapRef.current.setView(pos, mapRef.current.getZoom());
-    } else {
-      if (markerRef.current) {
-        markerRef.current.remove();
-        markerRef.current = null;
-      }
-    }
-  }, [lat, lng]);
-
-  return <div ref={mapContainerRef} className="w-full h-[400px] z-0 rounded-md border border-border" />;
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm text-xs font-mono px-3 py-1 rounded border border-border text-muted-foreground pointer-events-none">
+        Click to pin location
+      </div>
+    </div>
+  );
 }
