@@ -43,7 +43,7 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <Link href="/play" className="w-full sm:w-auto">
             <Button size="lg" className="w-full sm:w-auto h-16 px-12 text-lg font-display uppercase tracking-widest shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] transition-all duration-300">
-              Commence Operation
+              Start
             </Button>
           </Link>
         </div>
