@@ -92,7 +92,7 @@ export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRou
             style={{ left: xToPercent(guessResult.correctLng), top: yToPercent(guessResult.correctLat) }}
           >
             <svg width="24" height="36" viewBox="0 0 24 36" fill="none">
-              <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#22c55e" stroke="white" strokeWidth="2"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#ffffff" stroke="#1e293b" strokeWidth="2"/>
               <circle cx="12" cy="12" r="5" fill="white"/>
             </svg>
           </div>

@@ -7,7 +7,7 @@ import { RoundResult } from '@workspace/api-client-react';
 //   (+100,+100) = top-right
 
 const HALF = 100;
-const COLORS = ['#4169e1', '#a855f7', '#ec4899', '#14b8a6', '#22c55e'];
+const COLORS = ['#4169e1', '#a855f7', '#ec4899', '#14b8a6', '#ffffff'];
 
 function xToPercent(lng: number) {
   return `${((lng + HALF) / (HALF * 2)) * 100}%`;
