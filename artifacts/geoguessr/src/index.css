@@ -84,19 +84,19 @@
   --sidebar: 220 30% 6%;
   --sidebar-foreground: 210 20% 98%;
   --sidebar-border: 220 20% 18%;
-  --sidebar-primary: 36 100% 50%;
+  --sidebar-primary: 225 73% 57%;
   --sidebar-primary-foreground: 220 30% 8%;
   --sidebar-accent: 220 25% 15%;
   --sidebar-accent-foreground: 210 20% 98%;
-  --sidebar-ring: 36 100% 50%;
+  --sidebar-ring: 225 73% 57%;
 
   --popover: 220 25% 10%;
   --popover-foreground: 210 20% 98%;
   --popover-border: 220 20% 18%;
 
-  /* Amber/Orange primary for action/game feel */
-  --primary: 36 100% 50%; 
-  --primary-foreground: 220 30% 8%; 
+  /* Royal blue primary */
+  --primary: 225 73% 57%;
+  --primary-foreground: 210 20% 98%; 
 
   /* Forest/Sage secondary */
   --secondary: 142 71% 25%;
@@ -112,7 +112,7 @@
   --destructive-foreground: 210 20% 98%;
 
   --input: 220 20% 18%;
-  --ring: 36 100% 50%;
+  --ring: 225 73% 57%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-display: 'Oswald', serif;

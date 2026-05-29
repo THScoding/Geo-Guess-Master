@@ -17,7 +17,7 @@ export default function Home() {
       <header className="w-full p-6 flex justify-between items-center relative z-10">
         <div className="flex items-center gap-2 text-primary font-display font-bold text-2xl tracking-wider">
           <Globe className="w-8 h-8" />
-          <span>TERRA<span className="text-foreground">SIGHT</span></span>
+          <span>TECH HIGH <span className="text-foreground">GEOGUESSR</span></span>
         </div>
         <Link href="/admin">
           <Button variant="ghost" className="text-muted-foreground hover:text-foreground font-mono uppercase text-xs tracking-widest">

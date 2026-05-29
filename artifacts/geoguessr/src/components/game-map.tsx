@@ -81,7 +81,7 @@ export default function GameMap({ onGuessSelect, guessCoords, guessResult, isRou
               y1={yToPercent(guessCoords.lat)}
               x2={xToPercent(guessResult.correctLng)}
               y2={yToPercent(guessResult.correctLat)}
-              stroke="#f59e0b"
+              stroke="#4169e1"
               strokeWidth="2"
               strokeDasharray="8 5"
               strokeLinecap="round"

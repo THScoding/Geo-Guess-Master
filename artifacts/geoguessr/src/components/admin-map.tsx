@@ -61,7 +61,7 @@ export default function AdminMap({ lat, lng, onChange }: AdminMapProps) {
           style={{ left: xToPercent(lng!), top: yToPercent(lat!) }}
         >
           <svg width="22" height="33" viewBox="0 0 24 36" fill="none">
-            <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#f59e0b" stroke="white" strokeWidth="2"/>
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#4169e1" stroke="white" strokeWidth="2"/>
             <circle cx="12" cy="12" r="5" fill="white"/>
           </svg>
         </div>
