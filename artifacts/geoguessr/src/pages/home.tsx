@@ -33,8 +33,7 @@ export default function Home() {
         </div>
         
         <h1 className="text-5xl md:text-7xl font-display font-bold text-foreground mb-6 uppercase tracking-tight shadow-black drop-shadow-md">
-          Where in the <br className="md:hidden" />
-          <span className="text-primary">world</span> are you?
+          How well do you know <span className="text-primary">Tech High?</span>
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-12 font-mono leading-relaxed">
